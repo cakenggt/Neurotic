@@ -10,68 +10,6 @@
     this.hidden_sizes = hidden_layer_list;
     this.length = 0;
 
-    for (var h = 0; h < hidden_layer_list.length; h++){
-      //connect each hidden layer with previous layer
-      var layer_size = hidden_layer_list[h];
-      if (h == 0){
-        //connect with input
-        for (var i_node = 0; i_node < input; i_node++){
-          //initialize node list for this input
-          var node_list = [];
-          var map_length = this.map.length;
-          for (var h_node = input; h_node < input+layer_size; h_node++){
-            //connect each h_node with input
-            var edge = {
-              origin: i_node,
-              destination: h_node,
-              strength: Math.random()
-            };
-            node_list.push(edge);
-          }
-          console.log('from i node '+i_node);
-          this.map[i_node] = node_list;
-          this.length += node_list.length;
-        }
-      }
-      else{
-        //connect with previous hidden layer
-        var map_length = this.map.length;
-        for (var last_h_node = map_length; last_h_node < map_length+hidden_layer_list[h-1]; last_h_node++){
-          //initialize node list for this input
-          var node_list = [];
-          for (var h_node = map_length+hidden_layer_list[h-1]; h_node < map_length+hidden_layer_list[h-1]+layer_size; h_node++){
-            //connect each h_node with input
-            var edge = {
-              origin: last_h_node,
-              destination: h_node,
-              strength: Math.random()
-            };
-            node_list.push(edge);
-          }
-          console.log('from h node '+last_h_node);
-          this.map[last_h_node] = node_list;
-          this.length += node_list.length;
-        }
-      }
-    }
-    var map_length = this.map.length;
-    for (var last_h_node = map_length; last_h_node < map_length+hidden_layer_list[hidden_layer_list.length-1]; last_h_node++){
-      //connect last hidden layer to output
-      var node_list = [];
-      for (var o_node = map_length+hidden_layer_list[hidden_layer_list.length-1]; o_node < map_length+hidden_layer_list[hidden_layer_list.length-1]+output; o_node++){
-        //connect each h_node with input
-        var edge = {
-          origin: last_h_node,
-          destination: o_node,
-          strength: Math.random()
-        };
-        node_list.push(edge);
-      }
-      console.log('from h node '+last_h_node+' to o node');
-      this.map[last_h_node] = node_list;
-      this.length += node_list.length;
-    }
-
     this.query = function(input, expected_output){
       if (input.length > this.input_length){
         throw "Input too large";
@@ -158,29 +96,35 @@
       for (var i = 0; i < next.length; i++){
         result[next[i]] = 1;
       }
+      for (var i = 0; i < result.length; i++){
+        //fill result with 0's
+        if (!result[i]){
+          result[i] = 0;
+        }
+      }
       result = result.slice(this.map.length);
       if (expected_output){
         //teach, return backprop
-        console.log('result: ' + result);
-        console.log(backprop);
-        var correct = 0;
+        //console.log('result: ' + result);
+        var correct = eval_correct(result, expected_output);
         for (var i = 0; i < expected_output.length; i++){
-          if (expected_output[i] == result[i]){
-            correct ++;
-          }
           if (result[i]){
             if (expected_output[i] == result[i]){
               //strengthen
-              modify_weight(backprop, this.map.length+i, 1.1);
+              modify_weight(backprop, this.map.length+i, 1);
             }
             else{
               //weaken
-              modify_weight(backprop, this.map.length+i, 1/1.1);
+              modify_weight(backprop, this.map.length+i, -1);
             }
           }
         }
-        console.log('correct: ' + correct +'/'+this.output_length);
-        return backprop;
+        //console.log('correct %: ' + correct);
+        return {
+          backprop: backprop,
+          result: result,
+          correct: correct
+        };
       }
       else{
         //query
@@ -195,11 +139,13 @@
         var ctx = c.getContext("2d");
         ctx.clearRect(0, 0, c.width, c.height);
         ctx.beginPath();
-        var backprop = this.query(input, expected_output);
+        ctx.lineCap="round";
+        var results = this.query(input, expected_output);
+        var backprop = results.backprop;
         if (!this.loc_list){
           //If not already existing, then create it
-          var width = c.width-10;
-          var height = c.height-10;
+          var width = c.width = window.innerWidth;
+          var height = c.height = window.innerHeight;
           //List of all node locations
           var loc_list = [];
           var current_index = 0;
@@ -234,7 +180,7 @@
           var edge_list = this.map[i];
           for (var e = 0; e < edge_list.length; e++){
             var edge = edge_list[e];
-            var line_width = Math.sqrt(edge.strength * 100);
+            var line_width = edge.strength * 5;
             ctx.lineWidth = line_width;
             var origin = this.loc_list[edge.origin];
             var destination = this.loc_list[edge.destination];
@@ -243,9 +189,94 @@
           }
           ctx.stroke();
         }
+        return results;
       }
     }
 
+    this.export = function(){
+      return JSON.stringify({
+        map: this.map,
+        input_length: this.input_length,
+        output_length: this.output_length,
+        hidden_sizes: this.hidden_sizes,
+        length: this.length
+      });
+    }
+
+    this.import = function(raw){
+      var jraw = JSON.parse(raw);
+      for (var key in jraw){
+        this[key] = jraw[key];
+      }
+    }
+
+    //constructor
+    if (input == undefined){
+      console.log('Empty Neurotic created.\nUse the import function to fill.');
+      return;
+    }
+
+    for (var h = 0; h < hidden_layer_list.length; h++){
+      //connect each hidden layer with previous layer
+      var layer_size = hidden_layer_list[h];
+      if (h == 0){
+        //connect with input
+        for (var i_node = 0; i_node < input; i_node++){
+          //initialize node list for this input
+          var node_list = [];
+          var map_length = this.map.length;
+          for (var h_node = input; h_node < input+layer_size; h_node++){
+            //connect each h_node with input
+            var edge = {
+              origin: i_node,
+              destination: h_node,
+              strength: Math.random()
+            };
+            node_list.push(edge);
+          }
+          //console.log('from i node '+i_node);
+          this.map[i_node] = node_list;
+          this.length += node_list.length;
+        }
+      }
+      else{
+        //connect with previous hidden layer
+        var map_length = this.map.length;
+        for (var last_h_node = map_length; last_h_node < map_length+hidden_layer_list[h-1]; last_h_node++){
+          //initialize node list for this input
+          var node_list = [];
+          for (var h_node = map_length+hidden_layer_list[h-1]; h_node < map_length+hidden_layer_list[h-1]+layer_size; h_node++){
+            //connect each h_node with input
+            var edge = {
+              origin: last_h_node,
+              destination: h_node,
+              strength: Math.random()
+            };
+            node_list.push(edge);
+          }
+          //console.log('from h node '+last_h_node);
+          this.map[last_h_node] = node_list;
+          this.length += node_list.length;
+        }
+      }
+    }
+    var map_length = this.map.length;
+    for (var last_h_node = map_length; last_h_node < map_length+hidden_layer_list[hidden_layer_list.length-1]; last_h_node++){
+      //connect last hidden layer to output
+      var node_list = [];
+      for (var o_node = map_length+hidden_layer_list[hidden_layer_list.length-1]; o_node < map_length+hidden_layer_list[hidden_layer_list.length-1]+output; o_node++){
+        //connect each h_node with input
+        var edge = {
+          origin: last_h_node,
+          destination: o_node,
+          strength: Math.random()
+        };
+        node_list.push(edge);
+      }
+      //console.log('from h node '+last_h_node+' to o node');
+      this.map[last_h_node] = node_list;
+      this.length += node_list.length;
+    }
   }
 
   function modify_weight(backprop, index, modifier){
@@ -259,7 +290,7 @@
           continue;
         }
         var edge = next[i];
-        edge.strength *= modifier;
+        edge.strength = (Math.tanh(Math.atanh((edge.strength*2)-1)+modifier)+1)/2
         if (backprop[edge.origin]){
           next_next = next_next.concat(backprop[edge.origin]);
         }
@@ -267,6 +298,16 @@
       next = next_next;
       next_next = [];
     }
+  }
+
+  function eval_correct(result, expected_output){
+    var correct = 0;
+    for (var i = 0; i < expected_output.length; i++){
+      if (!expected_output[i] == !result[i]){
+        correct ++;
+      }
+    }
+    return correct/expected_output.length;
   }
 
   context.Neurotic = Neurotic;

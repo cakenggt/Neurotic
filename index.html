@@ -4,8 +4,52 @@
     <meta charset="utf-8">
     <title></title>
     <script src="neurotic.js" charset="utf-8"></script>
+    <script type="text/javascript">
+      var n = new Neurotic(16,[16],9);
+      var cont = true;
+      var count = 0;
+      var average = 0;
+      var averageSq = 0;
+      function anim(){
+        var a = Math.floor(Math.random()*255);
+        var b = Math.floor(Math.random()*255);
+        var result = a+b;
+        a = a.toString(2).split('');
+        b = b.toString(2).split('');
+        result = result.toString(2).split('');
+        while (a.length < 8){
+          a.unshift(0);
+        }
+        while (b.length < 8){
+          b.unshift(0);
+        }
+        while (result.length < 9){
+          result.unshift(0);
+        }
+        var query = a.concat(b);
+        if (count % 200 == 0){
+          n.animate('canvas',query,result);
+          document.getElementById('log').innerText += '\nAverage: ' + (average/200) + ' AverageSq: ' + (averageSq/200);
+          average = 0;
+          averageSq = 0;
+          count = 0;
+        }
+        else{
+          var results = n.query(query,result);
+          average += results.correct;
+          averageSq += Math.pow(parseInt(result.join(''), 2) - parseInt(results.result.join(''), 2), 2);
+        }
+        if (cont){
+          requestAnimationFrame(anim);
+        }
+        count++;
+      }
+    </script>
   </head>
   <body>
-    <canvas id="canvas" width="1000" height="500"></canvas>
+    <canvas id="canvas" style="width:100%; height:100%;"></canvas>
+    <button type="button" name="button" onclick="cont=true; anim();">start</button>
+    <button type="button" name="button" onclick="cont=false;">stop</button>
+    <pre id="log"></pre>
   </body>
 </html>
