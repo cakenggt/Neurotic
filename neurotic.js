@@ -21,7 +21,7 @@
         }
       }
       if (expected_output && expected_output.length != this.output_length){
-        throw "Expected output length different from output length";
+        throw "Expected output length different from output length: " + expected_output.length + ' vs ' + this.output_length;
       }
       var backprop = [];
       var next = [];
