@@ -5,7 +5,7 @@
     <title></title>
     <script src="neurotic.js" charset="utf-8"></script>
     <script type="text/javascript">
-      var n = new Neurotic(16,[32],512);
+      var n = new Neurotic(8,[8],8);
       var cont = true;
       var count = 0;
       var average = 0;
@@ -60,34 +60,16 @@
   <body>
     <canvas id="canvas" style="width:1500px; height:500px;" width="1500" height="500"></canvas><br>
     Net Attributes:<br>
-    Input Size: <input id="input" value="16"><br>
-    Hidden Layers: <input id="hidden" value="[32]"><br>
-    Output Size: <input id="output" value="512"><br>
+    Input Size: <input id="input" value="8"><br>
+    Hidden Layers: <input id="hidden" value="[8]"><br>
+    Output Size: <input id="output" value="8"><br>
     <button type="button" onclick="createNewNet()">Create New Net</button><hr>
     Test Function (must return map of format {input: [0,0,...,0], output: [0,0,...,0], outputVal: theValueOfTheOutput})<br>
     <textarea id="testFunction" rows="8" cols="80">
-var aVal = Math.floor(Math.random()*255);
-var bVal = Math.floor(Math.random()*255);
-var resultVal = aVal+bVal;
-a = aVal.toString(2).split('');
-b = bVal.toString(2).split('');
-result = [];
-for (var x = 0; x < 512; x++){
-  if (x < aVal+bVal){
-    result[x] = 1;
-  }
-  else{
-    result[x] = 0;
-  }
-}
-while (a.length < 8){
-  a.unshift(0);
-}
-while (b.length < 8){
-  b.unshift(0);
-}
-var query = a.concat(b);
-return {input: query, output: result, outputVal: resultVal};
+var query = [[10,10,10,10,0,0,0,0], [10,0,10,0,10,0,10,0]];
+var resultVal = 1;
+var choice = Math.floor(Math.random()*2);
+return {input: query[choice], output: query[choice], outputVal: resultVal};
     </textarea><br>
     <button type="button" id="start" onclick="cont=true; anim();">start</button>
     <button type="button" id="stop" disabled=true onclick="cont=false;">stop</button><br>

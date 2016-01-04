@@ -24,100 +24,37 @@
         throw "Expected output length different from output length: " + expected_output.length + ' vs ' + this.output_length;
       }
       var backprop = [];
-      var next = [];
+      //begin of new code----------------------------------------------------
+      var valueList = [];
+      //Initialize valueList with input values
       for (var i = 0; i < input.length; i++){
-        //go through initial input with input layer
-        var node = this.map[i];
-        if (input[i]){
-          var highest = [];
-          for (var edge_index = 0; edge_index < node.length; edge_index++){
-            //find highest strength connection to next node
-            var edge = node[edge_index];
-            if (expected_output){
-              if (Math.random() < edge.strength){
-                highest.push(edge);
-              }
-            }
-            else{
-              if (edge.strength > 0.5){
-                highest.push(edge);
-              }
-            }
+        valueList[i] = input[i];
+      }
+      for (var origin = 0; origin < this.map.length; origin++){
+        var originList = this.map[origin];
+        for (var i = 0; i < originList.length; i++){
+          var edge = originList[i];
+          //initialize value for destination node
+          valueList[edge.destination] = valueList[edge.destination] || 0;
+          //set new value for destination node
+          valueList[edge.destination] += valueList[edge.origin]*edge.strength;
+          //add to backprop
+          if (!backprop[edge.destination]){
+            backprop[edge.destination] = [];
           }
+          backprop[edge.destination].push(edge);
+        }
+      }
 
-          for (var j = 0; j < highest.length; j++){
-            if (next.indexOf(highest[j].destination) == -1){
-              next.push(highest[j].destination);
-              //add to backprop history
-              if (!backprop[highest[j].destination]){
-                backprop[highest[j].destination] = [];
-              }
-              backprop[highest[j].destination].push(highest[j]);
-            }
-          }
-        }
-      }
-      while (next[0] < this.map.length){
-        //while the next nodes are not in the output range
-        var next_next = [];
-        for (var i = 0; i < next.length; i++){
-          var node = this.map[next[i]];
-          var highest = [];
-          for (var edge_index = 0; edge_index < node.length; edge_index++){
-            //find highest strength connection to next node
-            var edge = node[edge_index];
-            if (expected_output){
-              if (Math.random() < edge.strength){
-                highest.push(edge);
-              }
-            }
-            else{
-              if (edge.strength > 0.5){
-                highest.push(edge);
-              }
-            }
-          }
-          for (var j = 0; j<highest.length; j++){
-            if (next_next.indexOf(highest[j].destination) == -1){
-              next_next.push(highest[j].destination);
-              //Add to backprop history
-              if (!backprop[highest[j].destination]){
-                backprop[highest[j].destination] = [];
-              }
-              backprop[highest[j].destination].push(highest[j]);
-            }
-          }
-        }
-        next = next_next;
-      }
       //return output
-      var result = []
-      result.length = this.map.length + this.output_length;
-      for (var i = 0; i < next.length; i++){
-        result[next[i]] = 1;
-      }
-      for (var i = 0; i < result.length; i++){
-        //fill result with 0's
-        if (!result[i]){
-          result[i] = 0;
-        }
-      }
-      result = result.slice(this.map.length);
+      var result = valueList.slice(this.map.length);
+      //end of new code------------------------------------------------------
       if (expected_output){
         //teach, return backprop
         //console.log('result: ' + result);
         var correct = eval_correct(result, expected_output);
         for (var i = 0; i < expected_output.length; i++){
-          if (result[i]){
-            if (expected_output[i] == result[i]){
-              //strengthen
-              modify_weight(backprop, this.map.length+i, 1);
-            }
-            else{
-              //weaken
-              modify_weight(backprop, this.map.length+i, -1);
-            }
-          }
+          modify_weights(backprop, this.map.length+i, expected_output[i]-result[i]);
         }
         //console.log('correct %: ' + correct);
         return {
@@ -182,7 +119,7 @@
           var edge_list = this.map[i];
           for (var e = 0; e < edge_list.length; e++){
             var edge = edge_list[e];
-            var line_width = edge.strength * 5;
+            var line_width = Math.pow(edge.strength, 1/2);
             ctx.lineWidth = line_width;
             var origin = this.loc_list[edge.origin];
             var destination = this.loc_list[edge.destination];
@@ -281,18 +218,17 @@
     }
   }
 
-  function modify_weight(backprop, index, modifier){
+  function modify_weights(backprop, index, modifier){
     //backpropogate through the backprop list and
     //multiply strengths by the modifier
     var next = [].concat(backprop[index]);
     var next_next = [];
     while (next.length != 0){
       for (var i = 0; i < next.length; i++){
-        if (!next[i]){
-          continue;
-        }
         var edge = next[i];
-        edge.strength = (Math.tanh(Math.atanh((edge.strength*2)-1)+modifier)+1)/2
+        if ((edge.strength > 1 && modifier > 0) || (edge.strength < 1 && modifier < 0)){
+          edge.strength *= (Math.tanh(modifier)/1000)+1;
+        }
         if (backprop[edge.origin]){
           next_next = next_next.concat(backprop[edge.origin]);
         }
@@ -305,9 +241,7 @@
   function eval_correct(result, expected_output){
     var correct = 0;
     for (var i = 0; i < expected_output.length; i++){
-      if (!expected_output[i] == !result[i]){
-        correct ++;
-      }
+      correct += Math.abs(expected_output[i] - result[i]);
     }
     return correct/expected_output.length;
   }
