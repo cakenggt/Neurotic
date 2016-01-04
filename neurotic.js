@@ -54,7 +54,7 @@
         //console.log('result: ' + result);
         var correct = eval_correct(result, expected_output);
         for (var i = 0; i < expected_output.length; i++){
-          modify_weights(backprop, this.map.length+i, expected_output[i]-result[i]);
+          modify_weights(backprop, valueList, this.map.length+i, expected_output[i]-result[i]);
         }
         //console.log('correct %: ' + correct);
         return {
@@ -169,7 +169,7 @@
             var edge = {
               origin: i_node,
               destination: h_node,
-              strength: Math.random()
+              strength: Math.random()-0.5
             };
             node_list.push(edge);
           }
@@ -218,7 +218,7 @@
     }
   }
 
-  function modify_weights(backprop, index, modifier){
+  function modify_weights(backprop, valueList, index, modifier){
     //backpropogate through the backprop list and
     //multiply strengths by the modifier
     var next = [].concat(backprop[index]);
@@ -226,9 +226,7 @@
     while (next.length != 0){
       for (var i = 0; i < next.length; i++){
         var edge = next[i];
-        if ((edge.strength > 1 && modifier > 0) || (edge.strength < 1 && modifier < 0)){
-          edge.strength *= (Math.tanh(modifier)/1000)+1;
-        }
+        edge.strength += Math.tanh(modifier)/100;
         if (backprop[edge.origin]){
           next_next = next_next.concat(backprop[edge.origin]);
         }
