@@ -37,7 +37,12 @@
           //initialize value for destination node
           valueList[edge.destination] = valueList[edge.destination] || 0;
           //set new value for destination node
-          valueList[edge.destination] += valueList[edge.origin]*edge.strength;
+          //Sigmoid function
+          var inputVal = sigmoid(valueList[edge.origin]);
+          //Threshold
+          if (inputVal > 0.5){
+            valueList[edge.destination] += inputVal*edge.strength;
+          }
           //add to backprop
           if (!backprop[edge.destination]){
             backprop[edge.destination] = [];
@@ -241,7 +246,11 @@
     for (var i = 0; i < expected_output.length; i++){
       correct += Math.abs(expected_output[i] - result[i]);
     }
-    return correct/expected_output.length;
+    return 1/correct;
+  }
+
+  function sigmoid(input){
+    1/(1+Math.pow(Math.E, -1*input/1.0))
   }
 
   context.Neurotic = Neurotic;
