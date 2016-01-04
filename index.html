@@ -11,36 +11,18 @@
       var average = 0;
       var averageSq = 0;
       function anim(){
-        var aVal = Math.floor(Math.random()*255);
-        var bVal = Math.floor(Math.random()*255);
-        var resultVal = aVal+bVal;
-        a = aVal.toString(2).split('');
-        b = bVal.toString(2).split('');
-        result = [];
-        for (var x = 0; x < 512; x++){
-          if (x < aVal+bVal){
-            result[x] = 1;
-          }
-          else{
-            result[x] = 0;
-          }
-        }
-        while (a.length < 8){
-          a.unshift(0);
-        }
-        while (b.length < 8){
-          b.unshift(0);
-        }
-        var query = a.concat(b);
+        document.getElementById('start').disabled = true;
+        document.getElementById('stop').disabled = false;
+        var data = eval(new Function(document.getElementById('testFunction').value))();
         if (count % 200 == 0){
-          n.animate('canvas',query,result);
-          document.getElementById('log').innerText += '\nAverage: ' + (average/200) + ' AverageSq: ' + (averageSq/200);
+          n.animate('canvas',data.input,data.output);
+          document.getElementById('log').innerText += '\nAverage: ' + (average/200) + ' Average Diff: ' + (averageSq/200);
           average = 0;
           averageSq = 0;
           count = 0;
         }
         else{
-          var results = n.query(query,result);
+          var results = n.query(data.input,data.output);
           average += results.correct;
           var sum = 0;
           for (var x = 0; x < 512; x++){
@@ -48,19 +30,71 @@
               sum ++;
             }
           }
-          averageSq += Math.pow(sum - (aVal+bVal), 2);
+          averageSq += Math.abs(sum - (data.outputVal));
         }
         if (cont){
           requestAnimationFrame(anim);
         }
+        else{
+          //stopping animation
+          document.getElementById('start').disabled = false;
+          document.getElementById('stop').disabled = true;
+        }
         count++;
+      }
+
+      function query(){
+        var result = n.query(JSON.parse(document.getElementById("queryValue").value));
+        document.getElementById('queryResult').innerText = result.result;
+        console.log(result);
+      }
+
+      function createNewNet(){
+        var input = parseInt(document.getElementById('input').value);
+        var hidden = JSON.parse(document.getElementById('hidden').value);
+        var output = parseInt(document.getElementById('output').value);
+        n = new Neurotic(input, hidden, output);
       }
     </script>
   </head>
   <body>
-    <canvas id="canvas" style="width:100%; height:100%;"></canvas>
-    <button type="button" name="button" onclick="cont=true; anim();">start</button>
-    <button type="button" name="button" onclick="cont=false;">stop</button>
-    <pre id="log"></pre>
+    <canvas id="canvas" style="width:1500px; height:500px;" width="1500" height="500"></canvas><br>
+    Net Attributes:<br>
+    Input Size: <input id="input" value="16"><br>
+    Hidden Layers: <input id="hidden" value="[32]"><br>
+    Output Size: <input id="output" value="512"><br>
+    <button type="button" onclick="createNewNet()">Create New Net</button><hr>
+    Test Function (must return map of format {input: [0,0,...,0], output: [0,0,...,0], outputVal: theValueOfTheOutput})<br>
+    <textarea id="testFunction" rows="8" cols="80">
+var aVal = Math.floor(Math.random()*255);
+var bVal = Math.floor(Math.random()*255);
+var resultVal = aVal+bVal;
+a = aVal.toString(2).split('');
+b = bVal.toString(2).split('');
+result = [];
+for (var x = 0; x < 512; x++){
+  if (x < aVal+bVal){
+    result[x] = 1;
+  }
+  else{
+    result[x] = 0;
+  }
+}
+while (a.length < 8){
+  a.unshift(0);
+}
+while (b.length < 8){
+  b.unshift(0);
+}
+var query = a.concat(b);
+return {input: query, output: result, outputVal: resultVal};
+    </textarea><br>
+    <button type="button" id="start" onclick="cont=true; anim();">start</button>
+    <button type="button" id="stop" disabled=true onclick="cont=false;">stop</button><br>
+    Log: <br><pre id="log"></pre><hr>
+    Query string (must be an array in JSON parseable format)
+    <input id="queryValue" value="[0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1]">
+    <button type="button" id="query" onclick="query();">Query</button><br>
+    Result: <pre id="queryResult"></pre>
   </body>
 </html>

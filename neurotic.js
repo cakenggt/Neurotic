@@ -128,7 +128,9 @@
       }
       else{
         //query
-        return result;
+        return {
+          result: result
+        };
       }
     }
 
@@ -144,8 +146,8 @@
         var backprop = results.backprop;
         if (!this.loc_list){
           //If not already existing, then create it
-          var width = c.width = window.innerWidth;
-          var height = c.height = window.innerHeight;
+          var width = c.width;
+          var height = c.height;
           //List of all node locations
           var loc_list = [];
           var current_index = 0;
