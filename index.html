@@ -8,29 +8,18 @@
       var n = new Neurotic(8,[8],8);
       var cont = true;
       var count = 0;
-      var average = 0;
-      var averageSq = 0;
+      var correct = Infinity;
       function anim(){
         document.getElementById('start').disabled = true;
         document.getElementById('stop').disabled = false;
         var data = eval(new Function(document.getElementById('testFunction').value))();
         if (count % 200 == 0){
           n.animate('canvas',data.input,data.output);
-          document.getElementById('log').innerText += '\nAverage: ' + (average/200) + ' Average Diff: ' + (averageSq/200);
-          average = 0;
-          averageSq = 0;
+          document.getElementById('log').innerText += '\nCorrect: ' + correct;
           count = 0;
         }
         else{
-          var results = n.query(data.input,data.output);
-          average += results.correct;
-          var sum = 0;
-          for (var x = 0; x < 512; x++){
-            if (results.result[x] == 1){
-              sum ++;
-            }
-          }
-          averageSq += Math.abs(sum - (data.outputVal));
+          correct = n.train(new Function(document.getElementById('testFunction').value), 1000, correct);
         }
         if (cont){
           requestAnimationFrame(anim);
@@ -75,7 +64,7 @@ return {input: query[choice], output: query[choice], outputVal: resultVal};
     <button type="button" id="stop" disabled=true onclick="cont=false;">stop</button><br>
     Log: <br><pre id="log"></pre><hr>
     Query string (must be an array in JSON parseable format)
-    <input id="queryValue" value="[0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1]">
+    <input id="queryValue" value="[10,10,10,10,0,0,0,0]">
     <button type="button" id="query" onclick="query();">Query</button><br>
     Result: <pre id="queryResult"></pre>
   </body>

@@ -58,9 +58,6 @@
         //teach, return backprop
         //console.log('result: ' + result);
         var correct = eval_correct(result, expected_output);
-        for (var i = 0; i < expected_output.length; i++){
-          modify_weights(backprop, valueList, this.map.length+i, expected_output[i]-result[i]);
-        }
         //console.log('correct %: ' + correct);
         return {
           backprop: backprop,
@@ -76,65 +73,92 @@
       }
     }
 
-    this.animate = function(canvas_id, input, expected_output){
-      if (expected_output){
-        //this is a teaching query
-        var c = document.getElementById(canvas_id);
-        var ctx = c.getContext("2d");
-        ctx.clearRect(0, 0, c.width, c.height);
-        ctx.beginPath();
-        ctx.lineCap="round";
-        var results = this.query(input, expected_output);
-        var backprop = results.backprop;
-        if (!this.loc_list){
-          //If not already existing, then create it
-          var width = c.width;
-          var height = c.height;
-          //List of all node locations
-          var loc_list = [];
-          var current_index = 0;
-          for (var i = 0; i < this.input_length; i++){
-            loc_list[i] = {
-              x: (i*width/this.input_length)+(width/this.input_length/2),
-              y: 10
-            };
-            current_index++;
-          }
-          for (var level = 0; level < this.hidden_sizes.length; level++){
-            var level_length = this.hidden_sizes[level];
-            for (var hi = 0; hi < level_length; hi++){
-              loc_list[current_index] = {
-                x: (hi*width/level_length)+(width/level_length/2),
-                y: (level+1)*height/(this.hidden_sizes.length+2)
-              };
-              current_index++;
-            }
-          }
-          for (var o = 0; o < this.output_length; o++){
-            loc_list[current_index] = {
-              x: (o*width/this.output_length)+(width/this.output_length/2),
-              y: height
-            };
-            current_index++;
-          }
-          this.loc_list = loc_list;
-        }
-        for (var i = 0; i < this.map.length; i++){
-          //draw edges
-          var edge_list = this.map[i];
-          for (var e = 0; e < edge_list.length; e++){
-            var edge = edge_list[e];
-            var line_width = Math.pow(edge.strength, 1/2);
-            ctx.lineWidth = line_width;
-            var origin = this.loc_list[edge.origin];
-            var destination = this.loc_list[edge.destination];
-            ctx.moveTo(origin.x, origin.y);
-            ctx.lineTo(destination.x, destination.y);
-          }
-          ctx.stroke();
-        }
-        return results;
+    this.train = function(trainingFunction, numTraining, optMin){
+      var initCorrect = 0;
+      var finalCorrect = 0;
+      for (var x = 0; x < numTraining; x++){
+        var data = trainingFunction();
+        var results = this.query(data.input, data.output);
+        initCorrect += results.correct;
       }
+      initCorrect /= numTraining;
+      var i = Math.floor(this.map.length * Math.random());
+      var j = Math.floor(this.map[i].length * Math.random());
+      var edge = this.map[i][j];
+      var oldStrength = edge.strength;
+      //evolve strength
+      edge.strength += Math.random()-0.5;
+      for (var x = 0; x < numTraining; x++){
+        var data = trainingFunction();
+        var results = this.query(data.input, data.output);
+        finalCorrect += results.correct;
+      }
+      finalCorrect /= numTraining;
+      if (finalCorrect > initCorrect){
+        edge.strength = oldStrength;
+      }
+      else if (optMin && finalCorrect >= optMin){
+        edge.strength = oldStrength;
+      }
+      return finalCorrect;
+    }
+
+    this.animate = function(canvas_id, input, expected_output){
+      //this is a teaching query
+      var c = document.getElementById(canvas_id);
+      var ctx = c.getContext("2d");
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.beginPath();
+      ctx.lineCap="round";
+      var results = this.query(input, expected_output);
+      if (!this.loc_list){
+        //If not already existing, then create it
+        var width = c.width;
+        var height = c.height;
+        //List of all node locations
+        var loc_list = [];
+        var current_index = 0;
+        for (var i = 0; i < this.input_length; i++){
+          loc_list[i] = {
+            x: (i*width/this.input_length)+(width/this.input_length/2),
+            y: 10
+          };
+          current_index++;
+        }
+        for (var level = 0; level < this.hidden_sizes.length; level++){
+          var level_length = this.hidden_sizes[level];
+          for (var hi = 0; hi < level_length; hi++){
+            loc_list[current_index] = {
+              x: (hi*width/level_length)+(width/level_length/2),
+              y: (level+1)*height/(this.hidden_sizes.length+2)
+            };
+            current_index++;
+          }
+        }
+        for (var o = 0; o < this.output_length; o++){
+          loc_list[current_index] = {
+            x: (o*width/this.output_length)+(width/this.output_length/2),
+            y: height
+          };
+          current_index++;
+        }
+        this.loc_list = loc_list;
+      }
+      for (var i = 0; i < this.map.length; i++){
+        //draw edges
+        var edge_list = this.map[i];
+        for (var e = 0; e < edge_list.length; e++){
+          var edge = edge_list[e];
+          var line_width = Math.pow(edge.strength, 1/2);
+          ctx.lineWidth = line_width;
+          var origin = this.loc_list[edge.origin];
+          var destination = this.loc_list[edge.destination];
+          ctx.moveTo(origin.x, origin.y);
+          ctx.lineTo(destination.x, destination.y);
+        }
+        ctx.stroke();
+      }
+      return results;
     }
 
     this.export = function(){
@@ -246,11 +270,11 @@
     for (var i = 0; i < expected_output.length; i++){
       correct += Math.abs(expected_output[i] - result[i]);
     }
-    return 1/correct;
+    return correct;
   }
 
   function sigmoid(input){
-    1/(1+Math.pow(Math.E, -1*input/1.0))
+    return 1/(1+Math.pow(Math.E, -1*input/1.0));
   }
 
   context.Neurotic = Neurotic;
