@@ -12,6 +12,9 @@
       function anim(){
         document.getElementById('start').disabled = true;
         document.getElementById('stop').disabled = false;
+        if (document.getElementById('evalFunction').value){
+          n.eval_correct = new Function('result', 'expected_output', document.getElementById('evalFunction').value);
+        }
         var data = eval(new Function(document.getElementById('testFunction').value))();
         if (count % 200 == 0){
           n.animate('canvas',data.input,data.output);
@@ -19,7 +22,7 @@
           count = 0;
         }
         else{
-          correct = n.train(new Function(document.getElementById('testFunction').value), 1000, correct);
+          correct = n.train(new Function(document.getElementById('testFunction').value), 1000);
         }
         if (cont){
           requestAnimationFrame(anim);
@@ -60,6 +63,8 @@ var resultVal = 1;
 var choice = Math.floor(Math.random()*2);
 return {input: query[choice], output: query[choice], outputVal: resultVal};
     </textarea><br>
+    Evaluation function (use the variables result and expected_output)<br>
+    <textarea id="evalFunction" rows="8" cols="80"></textarea><br>
     <button type="button" id="start" onclick="cont=true; anim();">start</button>
     <button type="button" id="stop" disabled=true onclick="cont=false;">stop</button><br>
     Log: <br><pre id="log"></pre><hr>

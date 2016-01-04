@@ -40,7 +40,7 @@
           //Sigmoid function
           var inputVal = sigmoid(valueList[edge.origin]);
           //Threshold
-          if (inputVal > 0.5){
+          if (inputVal > edge.threshold){
             valueList[edge.destination] += inputVal*edge.strength;
           }
           //add to backprop
@@ -57,7 +57,7 @@
       if (expected_output){
         //teach, return backprop
         //console.log('result: ' + result);
-        var correct = eval_correct(result, expected_output);
+        var correct = this.eval_correct(result, expected_output);
         //console.log('correct %: ' + correct);
         return {
           backprop: backprop,
@@ -73,7 +73,7 @@
       }
     }
 
-    this.train = function(trainingFunction, numTraining, optMin){
+    this.train = function(trainingFunction, numTraining){
       var initCorrect = 0;
       var finalCorrect = 0;
       for (var x = 0; x < numTraining; x++){
@@ -85,9 +85,21 @@
       var i = Math.floor(this.map.length * Math.random());
       var j = Math.floor(this.map[i].length * Math.random());
       var edge = this.map[i][j];
-      var oldStrength = edge.strength;
-      //evolve strength
-      edge.strength += Math.random()-0.5;
+      var isThresholdTrain = false//Math.random()>0.5;
+      var old;
+      if (isThresholdTrain){
+        old = edge.threshold;
+      }
+      else{
+        old = edge.strength;
+      }
+      //evolve
+      if (isThresholdTrain){
+        edge.threshold += (Math.random()-0.5)/5;
+      }
+      else{
+        edge.strength += Math.random()-0.5;
+      }
       for (var x = 0; x < numTraining; x++){
         var data = trainingFunction();
         var results = this.query(data.input, data.output);
@@ -95,10 +107,12 @@
       }
       finalCorrect /= numTraining;
       if (finalCorrect > initCorrect){
-        edge.strength = oldStrength;
-      }
-      else if (optMin && finalCorrect >= optMin){
-        edge.strength = oldStrength;
+        if (isThresholdTrain){
+          edge.threshold = old;
+        }
+        else{
+          edge.strength = old;
+        }
       }
       return finalCorrect;
     }
@@ -178,6 +192,14 @@
       }
     }
 
+    this.eval_correct = function(result, expected_output){
+      var correct = 0;
+      for (var i = 0; i < expected_output.length; i++){
+        correct += Math.abs(expected_output[i] - result[i]);
+      }
+      return correct;
+    }
+
     //constructor
     if (input == undefined){
       console.log('Empty Neurotic created.\nUse the import function to fill.');
@@ -198,7 +220,8 @@
             var edge = {
               origin: i_node,
               destination: h_node,
-              strength: Math.random()-0.5
+              strength: Math.random()-0.5,
+              threshold: 0.5
             };
             node_list.push(edge);
           }
@@ -218,7 +241,8 @@
             var edge = {
               origin: last_h_node,
               destination: h_node,
-              strength: Math.random()
+              strength: Math.random()-0.5,
+              threshold: 0.5
             };
             node_list.push(edge);
           }
@@ -237,7 +261,8 @@
         var edge = {
           origin: last_h_node,
           destination: o_node,
-          strength: Math.random()
+          strength: Math.random()-0.5,
+          threshold: 0.5
         };
         node_list.push(edge);
       }
@@ -245,32 +270,6 @@
       this.map[last_h_node] = node_list;
       this.length += node_list.length;
     }
-  }
-
-  function modify_weights(backprop, valueList, index, modifier){
-    //backpropogate through the backprop list and
-    //multiply strengths by the modifier
-    var next = [].concat(backprop[index]);
-    var next_next = [];
-    while (next.length != 0){
-      for (var i = 0; i < next.length; i++){
-        var edge = next[i];
-        edge.strength += Math.tanh(modifier)/100;
-        if (backprop[edge.origin]){
-          next_next = next_next.concat(backprop[edge.origin]);
-        }
-      }
-      next = next_next;
-      next_next = [];
-    }
-  }
-
-  function eval_correct(result, expected_output){
-    var correct = 0;
-    for (var i = 0; i < expected_output.length; i++){
-      correct += Math.abs(expected_output[i] - result[i]);
-    }
-    return correct;
   }
 
   function sigmoid(input){
