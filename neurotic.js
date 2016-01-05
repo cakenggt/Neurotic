@@ -55,7 +55,7 @@
     Returns a map of the format:
     {
       result: array of result values,
-      correct: analysis of correctness. The number lowers with more accuracy. This is only included if an expected_output is given
+      error: analysis of error. The number lowers with more accuracy. This is only included if an expected_output is given
     }
     */
     this.query = function(input, expected_output){
@@ -131,19 +131,19 @@
     numTraining: number of times to run the query before analysing the results
     */
     this.train = function(trainingFunction, numTraining){
-      //initialize the initial and final correctness values
+      //initialize the initial and final error values
       var initError = 0;
       var finalError = 0;
-      //get correctness data the specified number of times
+      //get error data the specified number of times
       for (var x = 0; x < numTraining; x++){
         //use the training function to get the test data
         var data = trainingFunction();
         //give the net a training query
         var results = this.query(data.input, data.output);
-        //add the correctness number to the initial correctness value
+        //add the error number to the initial error value
         initError += results.error;
       }
-      //get the average correctness value
+      //get the average error value
       initError /= numTraining;
       var i = Math.floor(this.map.length * Math.random());
       var j = Math.floor(this.map[i].length * Math.random());
