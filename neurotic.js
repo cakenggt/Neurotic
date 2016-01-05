@@ -186,6 +186,12 @@
           var edge = edge_list[e];
           var line_width = Math.pow(edge.strength, 1/2);
           ctx.lineWidth = line_width;
+          if (edge.strength < 0){
+            ctx.strokeStyle = 'red';
+          }
+          else{
+            ctx.strokeStyle = 'black';
+          }
           var origin = this.loc_list[edge.origin];
           var destination = this.loc_list[edge.destination];
           ctx.moveTo(origin.x, origin.y);

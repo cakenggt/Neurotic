@@ -20,3 +20,12 @@ var resultVal = aVal + bVal;
 return {input: [aVal, bVal], output: [resultVal]};
 
 ///////////////////////////////////////
+
+////////////////Difference///////////
+//Test function
+var aVal = Math.random() * 10;
+var bVal = Math.random() * 10;
+var resultVal = aVal - bVal;
+return {input: [aVal, bVal], output: [resultVal]};
+
+///////////////
