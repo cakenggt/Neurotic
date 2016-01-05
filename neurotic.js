@@ -34,18 +34,20 @@
     The third argument is the size of the output layer.
   */
   function Neurotic(input, hidden_layer_list, output){
-    //Each entry is the id of the origin node in the edge
+    //Each index is the id of the origin node in the edge
     this.map = [];
+    //List of nodes. The index is the id of the node
     this.nodeList = [];
     this.input_length = input;
     this.output_length = output;
     this.hidden_sizes = hidden_layer_list;
+    //How many edges there are in the net
     this.length = 0;
 
     /**
     Performs a query of the neural net. If an expected_output is given,
     the returned answer is evaluated for correctness. The evaluation function
-    can be replaced by overwriting this.eval_correct.
+    can be replaced by overwriting this.eval_error.
 
     input: array of floats.
     expected_output: optional array of floats.
@@ -58,54 +60,60 @@
     */
     this.query = function(input, expected_output){
       if (input.length > this.input_length){
+        //Throw error if the input is too large
         throw "Input too large";
       }
       else if (input.length < this.input_length){
-        //pad out input
+        //pad out input with zeros if too small
         for (var i = input.length; i < this.input_length; i++){
           input[i] = 0;
         }
       }
       if (expected_output && expected_output.length != this.output_length){
+        //throw error if the expected output is not the same size as the net's output
         throw "Expected output length different from output length: " + expected_output.length + ' vs ' + this.output_length;
       }
+      //this stores the values of the nodes as the signal propogatges.
+      //the index of the value corresponds to the id of the node.
       var valueList = [];
-      //Initialize valueList with input values
+      //Initialize valueList with the input values
       for (var i = 0; i < input.length; i++){
         valueList[i] = input[i];
       }
+      //for each list of edges in the map
       for (var origin = 0; origin < this.map.length; origin++){
         var originList = this.map[origin];
+        //for each edge in the list of edges
         for (var i = 0; i < originList.length; i++){
           var edge = originList[i];
+          //the edge's origin node
           var originNode = this.nodeList[edge.origin];
-          //initialize value for destination node
+          //initialize value for destination node, if it doesn't already exist
           valueList[edge.destination] = valueList[edge.destination] || 0;
-          //set new value for destination node
-          //Sigmoid function
+          //calculate the value that will be propogated if it is above the
+          //threshold using the sigmoid function
           var inputVal = sigmoid(valueList[edge.origin]);
-          //Threshold
+          //if the value is above the threshold, propogate it to the destination
           if (inputVal > originNode.threshold){
             valueList[edge.destination] += inputVal*edge.strength;
           }
         }
       }
 
-      //return output
+      //return the output, which are the last values in the list. This will be
+      //the length of the specified output for the net
       var result = valueList.slice(this.map.length);
-      //end of new code------------------------------------------------------
       if (expected_output){
-        //teach
-        //console.log('result: ' + result);
-        var correct = this.eval_correct(result, expected_output);
+        //this is a teaching query
+        var error = this.eval_error(result, expected_output);
         //console.log('correct %: ' + correct);
         return {
           result: result,
-          correct: correct
+          error: error
         };
       }
       else{
-        //query
+        //this is a normal query
         return {
           result: result
         };
@@ -123,14 +131,20 @@
     numTraining: number of times to run the query before analysing the results
     */
     this.train = function(trainingFunction, numTraining){
-      var initCorrect = 0;
-      var finalCorrect = 0;
+      //initialize the initial and final correctness values
+      var initError = 0;
+      var finalError = 0;
+      //get correctness data the specified number of times
       for (var x = 0; x < numTraining; x++){
+        //use the training function to get the test data
         var data = trainingFunction();
+        //give the net a training query
         var results = this.query(data.input, data.output);
-        initCorrect += results.correct;
+        //add the correctness number to the initial correctness value
+        initError += results.error;
       }
-      initCorrect /= numTraining;
+      //get the average correctness value
+      initError /= numTraining;
       var i = Math.floor(this.map.length * Math.random());
       var j = Math.floor(this.map[i].length * Math.random());
       var edge = this.map[i][j];
@@ -153,10 +167,10 @@
       for (var x = 0; x < numTraining; x++){
         var data = trainingFunction();
         var results = this.query(data.input, data.output);
-        finalCorrect += results.correct;
+        finalError += results.error;
       }
-      finalCorrect /= numTraining;
-      if (finalCorrect > initCorrect){
+      finalError /= numTraining;
+      if (finalError > initError){
         if (isThresholdTrain){
           node.threshold = old;
         }
@@ -164,7 +178,7 @@
           edge.strength = old;
         }
       }
-      return finalCorrect;
+      return finalError;
     }
 
     /**
@@ -285,20 +299,20 @@
     }
 
     /**
-    Evaluates how correct the result is. This can be overwritten for a custom
+    Evaluates how erroneous the result is. This can be overwritten for a custom
     evaluation.
 
     result: output array.
     expected_output: correct answer array.
 
-    Returns a number which signifies a more correct result if the number is lower.
+    Returns a number which signifies the average error.
     */
-    this.eval_correct = function(result, expected_output){
-      var correct = 0;
+    this.eval_error = function(result, expected_output){
+      var error = 0;
       for (var i = 0; i < expected_output.length; i++){
-        correct += Math.abs(expected_output[i] - result[i]);
+        error += Math.abs(expected_output[i] - result[i]);
       }
-      return correct;
+      return error;
     }
 
     /**

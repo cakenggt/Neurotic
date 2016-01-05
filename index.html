@@ -8,21 +8,21 @@
       var n = new Neurotic(8,[8],8);
       var cont = true;
       var count = 0;
-      var correct = Infinity;
+      var error = Infinity;
       function anim(){
         document.getElementById('start').disabled = true;
         document.getElementById('stop').disabled = false;
         if (document.getElementById('evalFunction').value){
-          n.eval_correct = new Function('result', 'expected_output', document.getElementById('evalFunction').value);
+          n.eval_error = new Function('result', 'expected_output', document.getElementById('evalFunction').value);
         }
         var data = eval(new Function(document.getElementById('testFunction').value))();
         if (count % 200 == 0){
           n.animate('canvas',data.input,data.output);
-          document.getElementById('log').innerText += '\nCorrect: ' + correct;
+          document.getElementById('log').innerText += '\nError %: ' + error;
           count = 0;
         }
         else{
-          correct = n.train(new Function(document.getElementById('testFunction').value), 1000);
+          error = n.train(new Function(document.getElementById('testFunction').value), 1000);
         }
         if (cont){
           requestAnimationFrame(anim);
@@ -63,6 +63,7 @@ var choice = Math.floor(Math.random()*2);
 return {input: query[choice], output: query[choice]};
     </textarea><br>
     Evaluation function (use the variables result and expected_output, which are both arrays and the returned values of the test function)<br>
+    This is optional, but if inputted, must return a positive value<br>
     <textarea id="evalFunction" rows="8" cols="80"></textarea><br>
     <button type="button" id="start" onclick="cont=true; anim();">start</button>
     <button type="button" id="stop" disabled=true onclick="cont=false;">stop</button><br>
