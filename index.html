@@ -56,14 +56,13 @@
     Hidden Layers: <input id="hidden" value="[8]"><br>
     Output Size: <input id="output" value="8"><br>
     <button type="button" onclick="createNewNet()">Create New Net</button><hr>
-    Test Function (must return map of format {input: [0,0,...,0], output: [0,0,...,0], outputVal: theValueOfTheOutput})<br>
+    Test Function (must return map of format {input: [0,0,...,0], output: [0,0,...,0]})<br>
     <textarea id="testFunction" rows="8" cols="80">
 var query = [[10,10,10,10,0,0,0,0], [10,0,10,0,10,0,10,0]];
-var resultVal = 1;
 var choice = Math.floor(Math.random()*2);
-return {input: query[choice], output: query[choice], outputVal: resultVal};
+return {input: query[choice], output: query[choice]};
     </textarea><br>
-    Evaluation function (use the variables result and expected_output)<br>
+    Evaluation function (use the variables result and expected_output, which are both arrays and the returned values of the test function)<br>
     <textarea id="evalFunction" rows="8" cols="80"></textarea><br>
     <button type="button" id="start" onclick="cont=true; anim();">start</button>
     <button type="button" id="stop" disabled=true onclick="cont=false;">stop</button><br>

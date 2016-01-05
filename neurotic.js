@@ -27,7 +27,7 @@
       }
       else if (input.length < this.input_length){
         //pad out input
-        for (var i = input.length; this.input_length; i++){
+        for (var i = input.length; i < this.input_length; i++){
           input[i] = 0;
         }
       }
