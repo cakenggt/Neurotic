@@ -2,16 +2,37 @@
 
   var default_strength = 0.001;
 
+  /**
+  Represents a node in the graph. The node contains a threshold that
+  the total input must exceed if it will be passed on.
+  */
   function Node(){
-    this.threshold = Math.random()
+    this.threshold = Math.random();
   }
 
+  /**
+  Represents an edge between two nodes in the graph. The edge has a
+  strength which determines what the input will be multiplied by.
+
+  origin: origin node index.
+  destination: destination node index.
+  */
   function Edge(origin, destination){
     this.origin= origin;
     this.destination= destination;
     this.strength= Math.random()-0.5;
   }
 
+  /**
+  The base class for the neural net. This can either be constructed with no arguments or with 3.
+
+  No arguments: creates an empty neural net which is meant to be filled with the import function.
+
+  3 arguments:
+    The first argument is the input layer size, which should be an integer.
+    The second argument should be a list of the sizes of the hidden layers.
+    The third argument is the size of the output layer.
+  */
   function Neurotic(input, hidden_layer_list, output){
     //Each entry is the id of the origin node in the edge
     this.map = [];
@@ -21,6 +42,20 @@
     this.hidden_sizes = hidden_layer_list;
     this.length = 0;
 
+    /**
+    Performs a query of the neural net. If an expected_output is given,
+    the returned answer is evaluated for correctness. The evaluation function
+    can be replaced by overwriting this.eval_correct.
+
+    input: array of floats.
+    expected_output: optional array of floats.
+
+    Returns a map of the format:
+    {
+      result: array of result values,
+      correct: analysis of correctness. The number lowers with more accuracy. This is only included if an expected_output is given
+    }
+    */
     this.query = function(input, expected_output){
       if (input.length > this.input_length){
         throw "Input too large";
@@ -77,6 +112,16 @@
       }
     }
 
+    /**
+    Trains the neural net using a genetic algorithm to change the edge strengths and node thresholds.
+
+    trainingFunction: a function which should return a map of format:
+      {
+        input: input array,
+        output: correct output array
+      },
+    numTraining: number of times to run the query before analysing the results
+    */
     this.train = function(trainingFunction, numTraining){
       var initCorrect = 0;
       var finalCorrect = 0;
@@ -122,6 +167,16 @@
       return finalCorrect;
     }
 
+    /**
+    Animates the net on the provided canvas. Also runs a query.
+    The nodes are represented by circles, the edges by lines. If a node or edge
+    is red, then that means that it's strength or threshold is negative. The weight
+    of the lines depends on the absolute value of their strength or threshold.
+
+    canvas_id: id of the canvas on the page to display the net.
+    input: input array for the query.
+    expected_output: correct output array for the query.
+    */
     this.animate = function(canvas_id, input, expected_output){
       //this is a teaching query
       var c = document.getElementById(canvas_id);
@@ -202,6 +257,9 @@
       return results;
     }
 
+    /**
+    Exports the net into a string, readable by the import function.
+    */
     this.export = function(){
       return JSON.stringify({
         map: this.map,
@@ -213,6 +271,12 @@
       });
     }
 
+    /**
+    Imports an exported neural net string. Overwrites current attributes and
+    net with imported info.
+
+    raw: exported neural net string.
+    */
     this.import = function(raw){
       var jraw = JSON.parse(raw);
       for (var key in jraw){
@@ -220,6 +284,15 @@
       }
     }
 
+    /**
+    Evaluates how correct the result is. This can be overwritten for a custom
+    evaluation.
+
+    result: output array.
+    expected_output: correct answer array.
+
+    Returns a number which signifies a more correct result if the number is lower.
+    */
     this.eval_correct = function(result, expected_output){
       var correct = 0;
       for (var i = 0; i < expected_output.length; i++){
@@ -228,7 +301,9 @@
       return correct;
     }
 
-    //constructor
+    /**
+    constructor
+    */
     if (input == undefined){
       console.log('Empty Neurotic created.\nUse the import function to fill.');
       return;
@@ -300,6 +375,11 @@
     }
   }
 
+  /**
+  Sigmoid function returns a number in the range 0 to 1.
+
+  input: float from -inf to inf
+  */
   function sigmoid(input){
     return 1/(1+Math.pow(Math.E, -1*input/1.0));
   }
