@@ -134,10 +134,13 @@
       //initialize the initial and final error values
       var initError = 0;
       var finalError = 0;
+      var trainingList = [];
       //get error data the specified number of times
       for (var x = 0; x < numTraining; x++){
         //use the training function to get the test data
         var data = trainingFunction();
+        //Add data to training list
+        trainingList.push(data);
         //give the net a training query
         var results = this.query(data.input, data.output);
         //add the error number to the initial error value
@@ -164,8 +167,8 @@
       else{
         edge.strength += Math.random()-0.5;
       }
-      for (var x = 0; x < numTraining; x++){
-        var data = trainingFunction();
+      for (var x = 0; x < trainingList.length; x++){
+        var data = trainingList[x];
         var results = this.query(data.input, data.output);
         finalError += results.error;
       }
