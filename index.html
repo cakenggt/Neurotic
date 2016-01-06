@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title></title>
     <script src="neurotic.js" charset="utf-8"></script>
+    <script src="example functions.js" charset="utf-8"></script>
     <script type="text/javascript">
       var n = new Neurotic(8,[8],8);
       var cont = true;
@@ -12,17 +13,45 @@
       function anim(){
         document.getElementById('start').disabled = true;
         document.getElementById('stop').disabled = false;
-        if (document.getElementById('evalFunction').value){
-          n.eval_error = new Function('result', 'expected_output', document.getElementById('evalFunction').value);
+        //checking which radio button is clicked
+        var testFunction;
+        var radios = document.getElementsByName('test');
+        for (var i = 0, length = radios.length; i < length; i++) {
+            if (radios[i].checked) {
+                // do whatever you want with the checked radio
+                switch(radios[i].value){
+                  case 'sine':
+                    testFunction = sine;
+                    break;
+                  case 'sum':
+                    testFunction = sum;
+                    break;
+                  case 'difference':
+                    testFunction = difference;
+                    break;
+                  case 'iris':
+                    testFunction = iris;
+                    break;
+                    case 'xor':
+                      testFunction = xor;
+                      break;
+                  case 'custom':
+                    testFunction = new Function('result', 'expected_output', document.getElementById('testFunction').value);
+                    break;
+                }
+
+                // only one radio can be logically checked, don't check the rest
+                break;
+            }
         }
-        var data = eval(new Function(document.getElementById('testFunction').value))();
+        var data = testFunction();
         if (count % 200 == 0){
           n.animate('canvas',data.input,data.output);
           document.getElementById('log').innerText += '\nError %: ' + error;
           count = 0;
         }
         else{
-          error = n.train(new Function(document.getElementById('testFunction').value), 1000);
+          error = n.train(testFunction, 1000);
         }
         if (cont){
           requestAnimationFrame(anim);
@@ -57,11 +86,17 @@
     Output Size: <input id="output" value="8"><br>
     <button type="button" onclick="createNewNet()">Create New Net</button><hr>
     Test Function (must return map of format {input: [0,0,...,0], output: [0,0,...,0]})<br>
-    <textarea id="testFunction" rows="8" cols="80">
-var query = [[10,10,10,10,0,0,0,0], [10,0,10,0,10,0,10,0]];
-var choice = Math.floor(Math.random()*2);
-return {input: query[choice], output: query[choice]};
-    </textarea><br>
+    <input type="radio" name="test" value="sine" checked>Sine</input>
+    <input type="radio" name="test" value="sum">Sum</input>
+    <input type="radio" name="test" value="difference">Difference</input>
+    <input type="radio" name="test" value="iris">Iris</input>
+    <input type="radio" name="test" value="xor">XOR</input>
+    <input type="radio" name="test" value="custom">Custom</input><br>
+    <textarea id="testFunction" rows="8" cols="80">var aVal = Math.random()*3.14;
+var resultVal = Math.sin(aVal);
+var a = [aVal];
+var result = [resultVal];
+return {input: a, output: result, outputVal: resultVal};</textarea><br>
     Evaluation function (use the variables result and expected_output, which are both arrays and the returned values of the test function)<br>
     This is optional, but if inputted, must return a positive value<br>
     <textarea id="evalFunction" rows="8" cols="80"></textarea><br>
