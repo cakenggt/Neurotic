@@ -1,6 +1,10 @@
 ///////////////////Sine///////////////
 //test function
 function sine(){
+  //check for correct size
+  if (n.input_length != 1 || n.output_length != 1){
+    n = new Neurotic(1, [4], 1);
+  }
   var aVal = Math.random()*3.14;
   var resultVal = Math.sin(aVal);
   var a = [aVal];
@@ -13,6 +17,10 @@ function sine(){
 /////////////////Sum////////////////
 //Test function
 function sum(){
+  //check for correct size
+  if (n.input_length != 2 || n.output_length != 1){
+    n = new Neurotic(2, [2], 1);
+  }
   var aVal = Math.random() * 10;
   var bVal = Math.random() * 10;
   var resultVal = aVal + bVal;
@@ -24,6 +32,10 @@ function sum(){
 ////////////////Difference///////////
 //Test function
 function difference(){
+  //check for correct size
+  if (n.input_length != 2 || n.output_length != 1){
+    n = new Neurotic(2, [4], 1);
+  }
   var aVal = Math.random() * 10;
   var bVal = Math.random() * 10;
   var resultVal = aVal - bVal;
@@ -35,6 +47,10 @@ function difference(){
 ///////////////Iris//////////
 //Test function
 function iris(){
+  //check for correct size
+  if (n.input_length != 4 || n.output_length != 1){
+    n = new Neurotic(4, [4], 1);
+  }
   var values = [[[5.1,3.5,1.4,0.2],[0]],
   [[4.9,3.0,1.4,0.2],[0]],
   [[4.7,3.2,1.3,0.2],[0]],
@@ -346,8 +362,33 @@ var additionalIris = [[[5.1,3.5,1.4,0.2],[0]],
 /////////XOR//////////////////
 /////////test function///////////
 function xor(){
+  //check for correct size
+  if (n.input_length != 2 || n.output_length != 1){
+    n = new Neurotic(2, [4], 1);
+  }
   var a = Math.round(Math.random());
   var b = Math.round(Math.random());
   var result = a != b ? 1 : 0;
   return {input: [a, b], output: [result]};
 }
+////////////////////////////////////
+
+//////////Fish///////////////
+function fish(){
+  //check for correct size
+  if (n.input_length != 3 || n.output_length != 1){
+    n = new Neurotic(3, [3], 1);
+  }
+  var food = Math.random();
+  var mateAngle = Math.random()*2*Math.PI;
+  var foodAngle = Math.random()*2*Math.PI;
+  var ansAngle = 0;
+  if (food < 0.1){
+    ansAngle = foodAngle;
+  }
+  else{
+    ansAngle = mateAngle;
+  }
+  return {input: [food, mateAngle, foodAngle], output: [ansAngle]}
+}
+//////////////////////////////////
