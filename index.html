@@ -38,6 +38,9 @@
                   case 'fish':
                     testFunction = fish;
                     break;
+                  case 'wine':
+                    testFunction = wine;
+                    break;
                   case 'custom':
                     testFunction = new Function('result', 'expected_output', document.getElementById('testFunction').value);
                     break;
@@ -95,6 +98,7 @@
     <input type="radio" name="test" value="iris">Iris</input>
     <input type="radio" name="test" value="xor">XOR</input>
     <input type="radio" name="test" value="fish">Fish</input>
+    <input type="radio" name="test" value="wine">Wine</input>
     <input type="radio" name="test" value="custom">Custom</input><br>
     <textarea id="testFunction" rows="8" cols="80">var aVal = Math.random()*3.14;
 var resultVal = Math.sin(aVal);
