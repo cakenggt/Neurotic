@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="example functions.js" charset="utf-8"></script>
+    <script src="bundle.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <canvas id="canvas" style="width:1500px; height:500px;" width="1500" height="500"></canvas><br>
+    Net Attributes:<br>
+    Input Size: <input id="input" value="8"><br>
+    Hidden Layers: <input id="hidden" value="[8]"><br>
+    Output Size: <input id="output" value="8"><br>
+    <button type="button" id="create">Create New Net</button><hr>
+    Test Function (must return map of format {input: [0,0,...,0], output: [0,0,...,0]})<br>
+    <input type="radio" name="test" value="sine" checked>Sine</input>
+    <input type="radio" name="test" value="sum">Sum</input>
+    <input type="radio" name="test" value="difference">Difference</input>
+    <input type="radio" name="test" value="iris">Iris</input>
+    <input type="radio" name="test" value="xor">XOR</input>
+    <input type="radio" name="test" value="custom">Custom</input><br>
+    <textarea id="testFunction" rows="8" cols="80">var aVal = Math.random()*3.14;
+var resultVal = Math.sin(aVal);
+var a = [aVal];
+var result = [resultVal];
+return {input: a, output: result, outputVal: resultVal};</textarea><br>
+    Evaluation function (use the variables result and expected_output, which are both arrays and the returned values of the test function)<br>
+    This is optional, but if inputted, must return a positive value<br>
+    <textarea id="evalFunction" rows="8" cols="80"></textarea><br>
+    <button type="button" id="start">start</button>
+    <button type="button" id="stop" disabled=true>stop</button><br>
+    Log: <br><pre id="log"></pre><hr>
+    Query string (must be an array in JSON parseable format)
+    <input id="queryValue" value="[10,10,10,10,0,0,0,0]">
+    <button type="button" id="query">Query</button><br>
+    Result: <pre id="queryResult"></pre>
+  </body>
+</html>
